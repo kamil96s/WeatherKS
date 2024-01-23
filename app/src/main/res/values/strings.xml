@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">WeatherKS</string>
+    <string name="city_name_format">%1$s</string>
+    <string name="temp_min_format">Lowest temperature recorded: %1$.2f°C</string>
+    <string name="temp_max_format">Highest temperature recorded: %1$.2f°C</string>
+    <string name="speed_format">Speed of Wind: %1$.2f m/s</string>
+    <string name="grnd_level_format">Ground level: %1$s m</string>
+    <string name="precipitation_format">Precipitation: %1$.2f mm</string>
+    <string name="visibility_format">Visibility: %1$s meters</string>
+    <string name="last_update_format">Last Update: %1$s time of data calculation</string>
+    <!-- Dodajemy więcej ciągów tekstowych, które są potrzebne w aplikacji. -->
 </resources>

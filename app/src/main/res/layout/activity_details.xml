@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/cityNameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="City Name"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
+    <TextView
+        android:id="@+id/temp_minTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temp_min"
+        android:layout_marginTop="8dp"/>
+    <TextView
+        android:id="@+id/temp_maxTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Temp_max"
+        android:layout_marginTop="8dp"/>
+    <TextView
+        android:id="@+id/speedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Speed"
+        android:layout_marginTop="8dp"/>
+    <TextView
+        android:id="@+id/grnd_levelTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="grnd_level"
+        android:layout_marginTop="8dp"/>
+    <TextView
+        android:id="@+id/precipitationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Precipitation"
+        android:layout_marginTop="8dp"/>
+    <TextView
+        android:id="@+id/visibilityTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Visibility"
+        android:layout_marginTop="8dp"/>
+    <TextView
+        android:id="@+id/lastUpdateTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Last Update"
+        android:layout_marginTop="8dp"/>
+    <!-- Możesz dodać więcej elementów interfejsu użytkownika tutaj. -->
+</LinearLayout>

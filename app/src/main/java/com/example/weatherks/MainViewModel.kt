@@ -1,6 +1,5 @@
 package com.example.weatherks
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,22 +10,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
-
     private val weatherRepository = WeatherRepository()
 
-    private val mutableWeatherData = MutableLiveData<UserInterface<List<Weather>>>()
-    val immutableWeatherData: LiveData<UserInterface<List<Weather>>> = mutableWeatherData
+    private val _weatherData = MutableLiveData<List<Weather>>()
+    val weatherData: LiveData<List<Weather>> = _weatherData
 
-    fun getData() {
+    fun getWeatherData() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = weatherRepository.getWeatherResponse()
-                val weathers = response.body()?.list
-                mutableWeatherData.postValue(UserInterface(data = weathers, isLoading = false, error = null))
-
+                if (response.isSuccessful) {
+                    response.body()?.let { responseBody ->
+                        _weatherData.postValue(responseBody.list)
+                    }
+                } else {
+                    // Obsłuż błąd
+                }
             } catch (e: Exception) {
-                mutableWeatherData.postValue(UserInterface(data = null, isLoading = false, error = e.message))
-                Log.e("MainViewModel", "Error occurred", e)
+                // Obsłuż wyjątek
             }
         }
     }

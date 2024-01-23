@@ -1,23 +1,22 @@
 package com.example.weatherks
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,21 +31,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.weatherks.details.DetailsActivity
 import com.example.weatherks.repository.template.Weather
 import com.example.weatherks.ui.theme.WeatherKSTheme
 
 class MainActivity : ComponentActivity() {
-
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel.getData()
+        viewModel.getWeatherData()
 
         setContent {
             WeatherKSTheme {
@@ -55,148 +52,106 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Showcase(viewModel = viewModel)
+                    MainContent()
                 }
             }
         }
     }
-}
 
-@Composable
-fun Showcase(viewModel: MainViewModel, modifier: Modifier = Modifier) {
-    val userInterface by viewModel.immutableWeatherData.observeAsState(UserInterface(isLoading = true))
+    @Composable
+    fun MainContent() {
+        val weatherState = viewModel.weatherData.observeAsState()
+        val weathers = weatherState.value ?: emptyList()
 
-    when {
-        userInterface.isLoading -> {
+        Showcase(weathers = weathers, onClick = { weather ->
+            navigateToDetailsActivity(weather)
+        })
+    }
+
+    fun navigateToDetailsActivity(weather: Weather) {
+        val intent = Intent(this, DetailsActivity::class.java).apply {
+            putExtra("WEATHER_ID", weather.id)
+            putExtra("CITY_NAME", weather.name)
+            putExtra("TEMP_MIN", weather.main.temp_min)
+            putExtra("TEMP_MAX", weather.main.temp_max)
+            putExtra("SPEED", weather.wind.speed)
+            putExtra("GROUND_LEVEL", weather.main.grnd_level)
+            putExtra("PRECIPITATION", weather.main.precipitation)
+            putExtra("FEELS_LIKE", weather.main.feels_like)
+            putExtra("LAST_UPDATE", weather.main.dt)
+            // Dodajemy tutaj dodatkowe informacje, jeśli są potrzebne
+        }
+        startActivity(intent)
+    }
+
+    @Composable
+    fun Showcase(weathers: List<Weather>, onClick: (Weather) -> Unit) {
+        if (weathers.isEmpty()) {
             ShowLoadingIndicator()
-        }
-
-        userInterface.error != null -> {
-            ShowErrorMessage(userInterface.error.toString())
-        }
-
-        userInterface.data != null -> {
-            userInterface.data?.let { ShowWeatherData(userInterface.data, modifier) }
-        }
-    }
-}
-
-@Composable
-fun ShowLoadingIndicator() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(64.dp),
-            color = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
-
-@Composable
-fun ShowErrorMessage(error: String?) {
-    if (error != null) {
-        Text(
-            text = "Error: $error",
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            color = Color.Red,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-fun ShowWeatherData(weathers: List<Weather>?, modifier: Modifier) {
-    if (weathers?.isNotEmpty() == true) {
-        LazyColumn(
-            modifier = modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp)
-        ) {
-            items(weathers) { weather ->
-                WeatherCard(weather = weather)
-                Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            LazyColumn {
+                items(weathers) { weather ->
+                    WeatherCard(weather = weather, onClick = onClick)
+                }
             }
         }
-    } else {
-        Text(
-            text = "No weather data available.",
+    }
+
+    @Composable
+    fun WeatherCard(weather: Weather, onClick: (Weather) -> Unit) {
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
+                .padding(16.dp)
+                .fillMaxWidth()
+                .background(Color.White)
+                .clickable { onClick(weather) }
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(id = getSpecificImageResource(weather)),
+                    contentDescription = null,
+                    modifier = Modifier.size(60.dp),
+                    contentScale = ContentScale.Fit
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(text = "${weather.name}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "Temperature: ${weather.main.temp}°C")
+                    Text(text = "Feels like: ${weather.main.feels_like}°C")
+                    Text(text = "Pressure: ${weather.main.pressure}hPa")
+                    Text(text = "Humidity: ${weather.main.humidity}%")
+                    // Możemy dodać więcej informacji o pogodzie tutaj
+                }
+            }
+        }
     }
-}
 
-@Composable
-fun WeatherCard(weather: Weather) {
-    Log.d("WeatherCard", "City: ${weather.name}, Temperature: ${weather.main.temp}°C")
-
-    val specificImageResource = getSpecificImageResource(weather)
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-    ) {
-        WeatherCardBackground(imageResource = specificImageResource)
-
-        WeatherCardContent(weather = weather)
+    @Composable
+    fun ShowLoadingIndicator() {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
     }
-}
 
-@Composable
-fun WeatherCardBackground(imageResource: Int) {
-    Image(
-        painter = painterResource(id = imageResource),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
-    )
-}
-
-@Composable
-fun WeatherCardContent(weather: Weather) {
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .background(Color.Transparent),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        WeatherText("Miasto: ${weather.name}", fontWeight = FontWeight.Bold, fontSize = 24.sp)
-        Spacer(modifier = Modifier.height(8.dp))
-        WeatherText("Temperatura: ${weather.main.temp}°C", fontSize = 18.sp)
-        WeatherText("Wilgotność: ${weather.main.humidity}%", fontSize = 18.sp)
-        WeatherText("Ciśnienie: ${weather.main.pressure} hPa", fontSize = 18.sp)
+    fun getSpecificImageResource(weather: Weather): Int {
+        // Implementacja zwracająca odpowiednią grafikę w zależności od temperatury
+        return when {
+            weather.main.temp > 20 -> R.drawable.sunny
+            weather.main.temp in 15.0..20.0 -> R.drawable.cloudy
+            weather.main.temp in 9.0..15.0 -> R.drawable.cloud
+            weather.main.temp in 0.0..9.0 -> R.drawable.rainy
+            else -> R.drawable.snowy
+        }
     }
-}
 
-@Composable
-fun WeatherText(text: String, fontWeight: FontWeight = FontWeight.Normal, fontSize: TextUnit = 16.sp) {
-    Text(
-        text = text,
-        fontWeight = fontWeight,
-        fontSize = fontSize,
-        color = Color.Black,
-        textAlign = TextAlign.Center
-    )
-}
-
-fun getSpecificImageResource(weather: Weather): Int {
-    return when {
-        weather.main.temp > 20 -> R.drawable.sunny
-        weather.main.temp > 5 && weather.main.temp < 15 -> R.drawable.cloudy
-        weather.main.temp < 5 && weather.main.temp > 0 -> R.drawable.rainy
-        weather.main.temp < 0 -> R.drawable.snowy
-        else -> R.drawable.default_background
+    @Preview(showBackground = true)
+    @Composable
+    fun DefaultPreview() {
+        WeatherKSTheme {
+            MainContent()
+        }
     }
 }
